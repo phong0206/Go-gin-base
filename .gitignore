@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+
+bin/
+tmp/
+coverage.out
+
+storage/*-private.key
+storage/*-public.key
+storage/logs/
+
+.DS_Store
