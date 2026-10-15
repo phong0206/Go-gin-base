@@ -40,3 +40,23 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, result)
 }
+
+func (h *AuthHandler) Register(c *gin.Context) {
+	var req dto.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		middleware.RespondError(c, domainerrors.New(
+			domainerrors.KindValidation,
+			"INVALID_INPUT",
+			err.Error(),
+		))
+		return
+	}
+
+	result, err := h.authUsecase.Register(c.Request.Context(), req)
+	if err != nil {
+		middleware.RespondError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, result)
+}
