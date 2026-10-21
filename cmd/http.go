@@ -86,7 +86,7 @@ func runHTTP() error {
 	authUsecase := usecases.NewAuthUsecase(userRepo, jwtAdapter, hasher)
 	authHandler := handler.NewAuthHandler(authUsecase)
 
-	userUsecase := usecases.NewUserUsecase(userRepo)
+	userUsecase := usecases.NewUserUsecase(userRepo, hasher)
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	// 4. Setup Gin router and routes

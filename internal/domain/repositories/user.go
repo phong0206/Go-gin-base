@@ -13,4 +13,6 @@ type IUserRepository interface {
 	Create(ctx context.Context, user *entities.User) error
 	UpdateRefreshToken(ctx context.Context, userID int, refreshToken string) error
 	ClearRefreshToken(ctx context.Context, userID int, refreshToken string) error
+	Update(ctx context.Context, userID int, isActive *bool, passwordHash *string) (*entities.User, error)
+	SoftDelete(ctx context.Context, userID int) error
 }

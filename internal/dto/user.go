@@ -15,6 +15,11 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UpdateUserRequest struct {
+	IsActive *bool   `json:"is_active"`
+	Password *string `json:"password" binding:"omitempty,min=6,max=128"`
+}
+
 func NewUserResponse(user *entities.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,

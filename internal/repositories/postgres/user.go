@@ -63,6 +63,37 @@ func (r *UserRepository) ClearRefreshToken(ctx context.Context, userID int, refr
 	return err
 }
 
+func (r *UserRepository) Update(ctx context.Context, userID int, isActive *bool, passwordHash *string) (*entities.User, error) {
+	const query = `
+		UPDATE users
+		SET is_active = COALESCE($2, is_active),
+			password_hash = COALESCE($3, password_hash),
+			refresh_token = CASE WHEN $2 = FALSE OR $3 IS NOT NULL THEN NULL ELSE refresh_token END,
+			updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+		RETURNING id, email, username, password_hash, refresh_token, is_active, deleted_at, created_at, updated_at
+	`
+
+	var user entities.User
+	if err := r.db.GetContext(ctx, &user, query, userID, isActive, passwordHash); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) SoftDelete(ctx context.Context, userID int) error {
+	const query = `
+		UPDATE users
+		SET deleted_at = NOW(), is_active = FALSE, refresh_token = NULL, updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
+}
+
 func mapDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
 	if !errors.As(err, &pgErr) || pgErr.Code != "23505" {
@@ -81,9 +112,9 @@ func mapDatabaseError(err error) error {
 
 func (r *UserRepository) findOne(ctx context.Context, where string, value any) (*entities.User, error) {
 	query := `
-		SELECT id, email, username, password_hash, refresh_token, is_active, created_at, updated_at
+		SELECT id, email, username, password_hash, refresh_token, is_active, deleted_at, created_at, updated_at
 		FROM users
-		` + where
+		` + where + ` AND deleted_at IS NULL`
 
 	var user entities.User
 	if err := r.db.GetContext(ctx, &user, query, value); err != nil {
