@@ -11,4 +11,6 @@ type IUserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*entities.User, error)
 	FindByUsername(ctx context.Context, username string) (*entities.User, error)
 	Create(ctx context.Context, user *entities.User) error
+	UpdateRefreshToken(ctx context.Context, userID int, refreshToken string) error
+	ClearRefreshToken(ctx context.Context, userID int, refreshToken string) error
 }

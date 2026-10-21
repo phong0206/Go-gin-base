@@ -43,6 +43,26 @@ func (r *UserRepository) Create(ctx context.Context, user *entities.User) error 
 	return nil
 }
 
+func (r *UserRepository) UpdateRefreshToken(ctx context.Context, userID int, refreshToken string) error {
+	const query = `
+		UPDATE users
+		SET refresh_token = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+	_, err := r.db.ExecContext(ctx, query, refreshToken, userID)
+	return err
+}
+
+func (r *UserRepository) ClearRefreshToken(ctx context.Context, userID int, refreshToken string) error {
+	const query = `
+		UPDATE users
+		SET refresh_token = NULL, updated_at = NOW()
+		WHERE id = $1 AND refresh_token = $2
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, refreshToken)
+	return err
+}
+
 func mapDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
 	if !errors.As(err, &pgErr) || pgErr.Code != "23505" {

@@ -60,3 +60,34 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	response.Success(c, http.StatusCreated, result)
 }
+
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	refreshToken := middleware.ExtractRefreshToken(c)
+	if refreshToken == "" {
+		middleware.RespondError(c, domainerrors.New(domainerrors.KindUnauthorized, "MISSING_REFRESH_TOKEN", "refresh token is required"))
+		return
+	}
+
+	result, err := h.authUsecase.RefreshToken(c.Request.Context(), refreshToken)
+	if err != nil {
+		middleware.RespondError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, result)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	refreshToken := middleware.ExtractRefreshToken(c)
+	if refreshToken == "" {
+		middleware.RespondError(c, domainerrors.New(domainerrors.KindUnauthorized, "MISSING_REFRESH_TOKEN", "refresh token is required"))
+		return
+	}
+
+	if err := h.authUsecase.Logout(c.Request.Context(), refreshToken); err != nil {
+		middleware.RespondError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

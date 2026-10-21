@@ -16,6 +16,7 @@ import (
 	"github.com/phong0206/go_gin_restful/internal/config"
 	"github.com/phong0206/go_gin_restful/internal/domain/repositories"
 	"github.com/phong0206/go_gin_restful/internal/handler"
+	"github.com/phong0206/go_gin_restful/internal/middleware"
 	"github.com/phong0206/go_gin_restful/internal/repositories/postgres"
 	"github.com/phong0206/go_gin_restful/internal/router"
 	"github.com/phong0206/go_gin_restful/internal/usecases"
@@ -79,7 +80,7 @@ func runHTTP() error {
 	if db != nil {
 		userRepo = postgres.NewUserRepository(db)
 	}
-	jwtAdapter := jwt.NewJWTService(cfg.JWT) 
+	jwtAdapter := jwt.NewJWTService(cfg.JWT)
 	hasher := helper.NewPasswordHelper()
 
 	authUsecase := usecases.NewAuthUsecase(userRepo, jwtAdapter, hasher)
@@ -89,7 +90,8 @@ func runHTTP() error {
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	// 4. Setup Gin router and routes
-	r := router.NewRouter(cfg, userHandler, authHandler)
+	verifyToken := middleware.VerifyToken(jwtAdapter, userRepo)
+	r := router.NewRouter(cfg, userHandler, authHandler, verifyToken)
 
 	// 5. Create and start HTTP Server
 	server := NewHTTPServer(r, cfg.HTTP.Address())

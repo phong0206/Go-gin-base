@@ -10,7 +10,7 @@ import (
 )
 
 // NewRouter initializes and configures the Gin engine with all global middlewares and routes.
-func NewRouter(cfg *config.Config, userHandler *handler.UserHandler, authHandler *handler.AuthHandler) *gin.Engine {
+func NewRouter(cfg *config.Config, userHandler *handler.UserHandler, authHandler *handler.AuthHandler, verifyToken gin.HandlerFunc) *gin.Engine {
 	if cfg.App.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -31,7 +31,7 @@ func NewRouter(cfg *config.Config, userHandler *handler.UserHandler, authHandler
 	// Custom 404 & 405 handlers
 	r.NoRoute(middleware.NotFound)
 	r.NoMethod(middleware.MethodNotAllowed)
-  
+
 	// System health check endpoint
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -45,7 +45,7 @@ func NewRouter(cfg *config.Config, userHandler *handler.UserHandler, authHandler
 	api := r.Group(cfg.HTTP.APIPrefix)
 	{
 		RegisterAuthRoutes(api, authHandler)
-		RegisterUserRoutes(api, userHandler)
+		RegisterUserRoutes(api, userHandler, verifyToken)
 	}
 
 	return r

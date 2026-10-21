@@ -6,8 +6,9 @@ import (
 )
 
 // RegisterUserRoutes sets up user-related endpoints under the provided router group.
-func RegisterUserRoutes(rg *gin.RouterGroup, userHandler *handler.UserHandler) {
+func RegisterUserRoutes(rg *gin.RouterGroup, userHandler *handler.UserHandler, verifyToken gin.HandlerFunc) {
 	users := rg.Group("/users")
+	users.Use(verifyToken)
 	{
 		users.GET("", userHandler.List)
 		users.GET("/:id", userHandler.GetByID)
